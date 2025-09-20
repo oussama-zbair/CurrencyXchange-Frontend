@@ -43,7 +43,7 @@ export const HeroSection = () => {
 
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {["Real-time Rates", "180+ Currencies", "Mobile Optimized"].map((feature, index) => (
+            {["Real-time Rates", "247+ Currencies", "Mobile Optimized"].map((feature, index) => (
               <div
                 key={feature}
                 className="flex items-center space-x-2 bg-card border border-border px-4 py-2 rounded-full animate-scale-in"
