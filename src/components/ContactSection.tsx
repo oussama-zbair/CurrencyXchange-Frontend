@@ -16,7 +16,7 @@ export const ContactSection = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
             <a
-              href="https://github.com"
+              href="https://github.com/oussama-zbair/CurrencyXchange-Frontend"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
@@ -37,7 +37,7 @@ export const ContactSection = () => {
             </a>
             
             <a
-              href="mailto:your.email@example.com"
+              href="mailto:oussama.zbair9@gmail.com"
               className="group"
             >
               <div className="bg-card border border-border rounded-2xl p-8 hover:shadow-elegant transition-smooth hover:-translate-y-1">

@@ -31,7 +31,7 @@ export const AboutSection = () => {
               </div>
               <h3 className="text-xl font-semibold text-foreground">Backend</h3>
               <p className="text-muted-foreground">
-                Java Spring Boot backend (coming soon) will provide real-time 
+                Java Spring Boot backend will provide real-time 
                 exchange rates and API services.
               </p>
             </div>

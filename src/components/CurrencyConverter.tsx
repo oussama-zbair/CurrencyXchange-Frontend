@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Flag from "react-flagkit";
+import { fetchCountries, fetchLocation, fetchCurrencyRates } from "@/lib/api";
 
 interface CountryData {
   countryName: string;
@@ -33,36 +34,33 @@ const CurrencySelector = ({
 
   const selectedData = countryData.find(c => c.currencyCode === value);
 
-  // Primary countries for major currencies
-  const primaryCountries = {
-    'USD': 'US',
-    'EUR': 'EU',
-    'GBP': 'GB',
-    'JPY': 'JP',
-    'CAD': 'CA',
-    'AUD': 'AU',
-    'CHF': 'CH',
-    'CNY': 'CN',
-    'INR': 'IN',
-    'BRL': 'BR'
+  const primaryCountries: Record<string, string> = {
+    USD: "US",
+    EUR: "EU",
+    GBP: "GB",
+    JPY: "JP",
+    CAD: "CA",
+    AUD: "AU",
+    CHF: "CH",
+    CNY: "CN",
+    INR: "IN",
+    BRL: "BR",
   };
 
   const filteredCountries = searchQuery === ""
     ? countryData
     : countryData.filter(country => {
-      const search = searchQuery.toLowerCase();
-      return (
-        country.countryName?.toLowerCase().includes(search) ||
-        country.currencyCode?.toLowerCase().includes(search) ||
-        country.currencyName?.toLowerCase().includes(search)
-      );
-    });
+        const search = searchQuery.toLowerCase();
+        return (
+          country.countryName?.toLowerCase().includes(search) ||
+          country.currencyCode?.toLowerCase().includes(search) ||
+          country.currencyName?.toLowerCase().includes(search)
+        );
+      });
 
-  // Sort to prioritize primary countries for each currency
   const sortedCountries = [...filteredCountries].sort((a, b) => {
     const aIsPrimary = primaryCountries[a.currencyCode] === a.countryCode;
     const bIsPrimary = primaryCountries[b.currencyCode] === b.countryCode;
-
     if (aIsPrimary && !bIsPrimary) return -1;
     if (!aIsPrimary && bIsPrimary) return 1;
     return a.countryName.localeCompare(b.countryName);
@@ -71,12 +69,12 @@ const CurrencySelector = ({
   const renderFlag = (countryCode: string | null, currency: string) => {
     if (!countryCode) {
       const flagEmojis: { [key: string]: string } = {
-        "XOF": "🌍",
-        "BTC": "₿",
-        "ETH": "Ξ",
-        "XDR": "🏦",
-        "XAU": "🥇",
-        "XAG": "🥈"
+        XOF: "🌍",
+        BTC: "₿",
+        ETH: "Ξ",
+        XDR: "🏦",
+        XAU: "🥇",
+        XAG: "🥈",
       };
       return <span className="text-lg">{flagEmojis[currency] || "💱"}</span>;
     }
@@ -96,7 +94,7 @@ const CurrencySelector = ({
             className="h-12 w-full justify-between text-lg transition-smooth hover:shadow-glow focus:shadow-glow"
           >
             <div className="flex items-center space-x-2">
-              {renderFlag(selectedData?.countryCode || null, selectedData?.currencyCode || '')}
+              {renderFlag(selectedData?.countryCode || null, selectedData?.currencyCode || "")}
               <div className="flex flex-col items-start">
                 <span className="font-medium">{selectedData?.currencyCode}</span>
                 <span className="text-xs text-muted-foreground hidden sm:block">
@@ -122,8 +120,7 @@ const CurrencySelector = ({
                   <CommandItem
                     key={`${country.currencyCode}-${country.countryCode || index}`}
                     value={`${country.countryName} ${country.currencyCode} ${country.currencyName}`}
-                    onSelect={(selectedValue) => {
-                      console.log('Selected currency:', selectedValue, country);
+                    onSelect={() => {
                       onSelect(country.currencyCode);
                       setOpen(false);
                       setSearchQuery("");
@@ -153,18 +150,15 @@ const CurrencySelector = ({
 };
 
 const formatCurrency = (amount: number, currency: string) => {
-  if (!currency || typeof currency !== "string" || currency.length !== 3) {
-    return "$" + amount.toFixed(2);
-  }
   try {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 6,
     }).format(amount);
-  } catch (e) {
-    return amount.toFixed(2) + " " + currency;
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
   }
 };
 
@@ -178,62 +172,44 @@ export const CurrencyConverter = () => {
   const [countryData, setCountryData] = useState<CountryData[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
-  const [detectedLocation, setDetectedLocation] = useState<{ country: string, currency: string } | null>(null);
+  const [detectedLocation, setDetectedLocation] = useState<{ country: string; currency: string } | null>(null);
 
   useEffect(() => {
     const detectUserLocation = async () => {
       try {
-        console.log('Attempting to detect user location...');
-        const response = await fetch('http://localhost:8080/api/location');
-
-        if (response.ok) {
-          const locationData = await response.json();
-          console.log('Detected location:', locationData);
-
-          if (locationData.currency) {
-            setFromCurrency(locationData.currency);
-            setDetectedLocation(locationData);
-          }
-        } else {
-          console.warn('Location detection failed, using default USD');
+        const locationData = await fetchLocation();
+        if (locationData.currency) {
+          setFromCurrency(locationData.currency);
+          setDetectedLocation(locationData);
         }
-      } catch (error) {
-        console.warn('Location detection error, using default USD:', error);
+      } catch {
+        console.warn("Location detection failed, defaulting to USD");
       }
     };
-
     detectUserLocation();
   }, []);
 
   useEffect(() => {
-  const fetchCountryData = async () => {
-    try {
-      setDataLoading(true);
-      const response = await fetch('http://localhost:8080/api/countries');
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        setCountryData(data);
-        setDataError(null);
-      } else {
-        setDataError('No currencies available.');
+    const loadCountries = async () => {
+      try {
+        setDataLoading(true);
+        const data = await fetchCountries();
+        if (Array.isArray(data) && data.length > 0) {
+          setCountryData(data);
+          setDataError(null);
+        } else {
+          setCountryData([]);
+          setDataError("No currencies available.");
+        }
+      } catch {
+        setDataError("Failed to load currency data.");
         setCountryData([]);
+      } finally {
+        setDataLoading(false);
       }
-    } catch (error) {
-      setDataError('Failed to load currency data.');
-      setCountryData([]);
-    } finally {
-      setDataLoading(false);
-    }
-  };
-
-  fetchCountryData();
-}, []);
+    };
+    loadCountries();
+  }, []);
 
   const handleSwapCurrencies = () => {
     setFromCurrency(toCurrency);
@@ -242,36 +218,19 @@ export const CurrencyConverter = () => {
 
   const handleConvert = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
-
     setIsLoading(true);
-    setDataError(null);
-
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/currency/rates?baseCurrency=${fromCurrency}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Exchange rates response:', data);
-
+      const data = await fetchCurrencyRates(fromCurrency);
       if (!data.exchangeRates || !data.exchangeRates[toCurrency]) {
         throw new Error(`Exchange rate for ${toCurrency} not found`);
       }
-
       const rate = data.exchangeRates[toCurrency];
-      const result = parseFloat(amount) * rate;
-
-      setConvertedAmount(result);
       setExchangeRate(rate);
-    } catch (error) {
-      console.error('Conversion error:', error);
+      setConvertedAmount(parseFloat(amount) * rate);
+    } catch {
       setConvertedAmount(null);
       setExchangeRate(null);
-      setDataError('Error converting currencies. Please try again.');
+      setDataError("Error converting currencies. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -281,9 +240,7 @@ export const CurrencyConverter = () => {
     <section id="currency-converter" className="py-20 bg-gradient-subtle">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
-            Currency Converter
-          </h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">Currency Converter</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Convert between 240+ currencies with real-time exchange rates
           </p>
@@ -302,7 +259,7 @@ export const CurrencyConverter = () => {
               <Input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={e => setAmount(e.target.value)}
                 className="h-12 text-lg font-semibold text-center"
                 placeholder="Enter amount"
                 min="0"
@@ -313,7 +270,10 @@ export const CurrencyConverter = () => {
             {detectedLocation && (
               <div className="text-center py-2 px-4 bg-primary/5 border border-primary/10 rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  Detected currency: {countryData.find(c => c.currencyCode === detectedLocation.currency)?.currencyName || detectedLocation.currency} ({detectedLocation.currency})
+                  Detected currency:{" "}
+                  {countryData.find(c => c.currencyCode === detectedLocation.currency)?.currencyName ||
+                    detectedLocation.currency}{" "}
+                  ({detectedLocation.currency})
                 </p>
               </div>
             )}
@@ -333,13 +293,7 @@ export const CurrencyConverter = () => {
 
             {!dataLoading && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <CurrencySelector
-                  value={fromCurrency}
-                  onSelect={setFromCurrency}
-                  label="From"
-                  countryData={countryData}
-                  disabled={dataLoading}
-                />
+                <CurrencySelector value={fromCurrency} onSelect={setFromCurrency} label="From" countryData={countryData} disabled={dataLoading} />
 
                 <div className="flex justify-center md:justify-start">
                   <Button
@@ -353,13 +307,7 @@ export const CurrencyConverter = () => {
                   </Button>
                 </div>
 
-                <CurrencySelector
-                  value={toCurrency}
-                  onSelect={setToCurrency}
-                  label="To"
-                  countryData={countryData}
-                  disabled={dataLoading}
-                />
+                <CurrencySelector value={toCurrency} onSelect={setToCurrency} label="To" countryData={countryData} disabled={dataLoading} />
               </div>
             )}
 
@@ -383,9 +331,7 @@ export const CurrencyConverter = () => {
             {convertedAmount !== null && exchangeRate !== null && !isLoading && (
               <div className="mt-6 p-6 bg-primary/5 rounded-xl border border-primary/10">
                 <div className="text-center space-y-4">
-                  <div className="text-3xl font-bold text-primary">
-                    {formatCurrency(convertedAmount, toCurrency)}
-                  </div>
+                  <div className="text-3xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</div>
                   <div className="text-sm text-muted-foreground">
                     1 {fromCurrency} = {exchangeRate.toFixed(6)} {toCurrency}
                   </div>

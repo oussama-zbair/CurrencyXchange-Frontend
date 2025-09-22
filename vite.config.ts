@@ -4,9 +4,16 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "./", // Ensure relative paths for static deployment
   server: {
     host: "::",
     port: 3000,
+  },
+  build: {
+    outDir: "dist",         
+    emptyOutDir: true,      
+    target: "esnext",       
+    sourcemap: false,       
   },
   plugins: [react()],
   resolve: {
