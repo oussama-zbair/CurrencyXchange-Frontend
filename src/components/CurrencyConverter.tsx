@@ -191,23 +191,31 @@ export const CurrencyConverter = () => {
 
   useEffect(() => {
     const loadCountries = async () => {
-      try {
-        setDataLoading(true);
-        const data = await fetchCountries();
-        if (Array.isArray(data) && data.length > 0) {
-          setCountryData(data);
-          setDataError(null);
-        } else {
-          setCountryData([]);
-          setDataError("No currencies available.");
-        }
-      } catch {
-        setDataError("Failed to load currency data.");
-        setCountryData([]);
-      } finally {
-        setDataLoading(false);
+  try {
+    setDataLoading(true);
+    const data = await fetchCountries();
+    const patchedData = data.map((country: CountryData) => {
+      if (country.currencyCode === "USD") {
+        return { ...country, countryCode: "US" };
       }
-    };
+      return country;
+    });
+
+    if (Array.isArray(patchedData) && patchedData.length > 0) {
+      setCountryData(patchedData);
+      setDataError(null);
+    } else {
+      setCountryData([]);
+      setDataError("No currencies available.");
+    }
+  } catch {
+    setDataError("Failed to load currency data.");
+    setCountryData([]);
+  } finally {
+    setDataLoading(false);
+  }
+};
+
     loadCountries();
   }, []);
 
