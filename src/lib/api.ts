@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "https://currencyxchange-api.azurewebsites.net/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://currencyxchange-backend.azurewebsites.net";
 
 export async function fetchCountries() {
   const res = await fetch(`${BASE_URL}/countries`);
