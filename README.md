@@ -1,82 +1,92 @@
+
 # CurrencyXchange Frontend
 
-CurrencyXchange is a modern currency converter web application built as a personal portfolio project. This repository contains the **frontend** codebase, showcasing best practices in React, TypeScript, and Tailwind CSS.
+[![License](https://img.shields.io/github/license/oussama-zbair/CurrencyXchange-Frontend)](https://github.com/oussama-zbair/CurrencyXchange-Frontend/blob/main/LICENSE)
+[![Stars](https://img.shields.io/github/stars/oussama-zbair/CurrencyXchange-Frontend?style=social)](https://github.com/oussama-zbair/CurrencyXchange-Frontend/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/oussama-zbair/CurrencyXchange-Frontend)](https://github.com/oussama-zbair/CurrencyXchange-Frontend/commits/main)
+[![Frontend Status](https://img.shields.io/badge/status-live-brightgreen)](https://green-sea-0ad5cce03.1.azurestaticapps.net/)
+
+> Beautiful, responsive, and real-time currency converter built with React, TypeScript, Tailwind, and modern UI libraries.
+
+---
 
 ## 🚀 Features
 
-- **Real-time Currency Conversion:** Instantly convert between 180+ currencies.
-- **Responsive Design:** Mobile-first layout for seamless experience on all devices.
-- **Animated UI:** Smooth transitions, interactive elements, and visually appealing effects.
-- **Accessible Components:** Custom UI built with [Radix UI](https://www.radix-ui.com/) primitives for accessibility.
-- **Theming:** Toggle between light and dark modes.
-- **Toast Notifications:** User feedback via custom and Sonner toasts.
-- **Navigation:** Fixed navigation bar with mobile menu support.
-- **Portfolio Sections:** About, Contact, and Tech Stack sections for demonstration.
+- 🔁 **Real-time Currency Conversion:** Instantly convert between 180+ currencies.
+- 💡 **Responsive & Animated UI:** Mobile-friendly with smooth transitions.
+- 🌓 **Dark Mode Ready:** Toggle between light and dark themes.
+- 🧩 **Accessible UI Components:** Built with Radix primitives.
+- 🔔 **User Feedback:** Interactive toasts via Sonner.
+- 🌐 **Geolocation-based Currency Defaults.**
+- 🧭 **Minimalist Navigation:** Fixed nav with responsive drawer.
+- 🧑‍💻 **Personal Portfolio Sections:** About, Tech Stack, and Contact.
 
 ## 🛠️ Tech Stack
 
-- **React 18** – UI library for building interactive interfaces.
-- **TypeScript** – Type-safe development for maintainable code.
-- **Tailwind CSS** – Utility-first CSS framework for rapid styling.
-- **Vite** – Fast development server and build tool.
-- **Radix UI** – Accessible, unstyled UI primitives (Accordion, Dialog, Dropdown, etc.).
-- **Lucide Icons** – Beautiful SVG icon set.
-- **Sonner** – Toast notification library.
-- **React Router** – Client-side routing.
-- **TanStack Query** – Data fetching and caching.
-- **Other Libraries:** class-variance-authority, clsx, embla-carousel-react, recharts, zod, vaul, input-otp.
+| Tech                | Description                                 |
+|---------------------|---------------------------------------------|
+| React 18            | Frontend framework                          |
+| TypeScript          | Type safety and better DX                   |
+| Tailwind CSS        | Utility-first styling                       |
+| Vite                | Fast build tool                             |
+| Radix UI            | Accessible components                       |
+| Lucide Icons        | Elegant icons                               |
+| TanStack Query      | Fetching/caching abstraction                |
+| React Router        | Routing                                     |
+| Sonner              | Toast notification system                   |
+| Other               | clsx, zod, vaul, OTP, embla-carousel-react |
 
 ## 📁 Project Structure
 
 ```plaintext
 src/
   components/
-    ui/                # Custom UI components (Accordion, Button, Card, etc.)
-    AboutSection.tsx   # About section
-    ContactSection.tsx # Contact section
-    CurrencyConverter.tsx # Main converter logic
-    Footer.tsx         # Footer with tech stack
-    HeroSection.tsx    # Landing hero section
-    Navigation.tsx     # Top navigation bar
-  hooks/               # Custom React hooks
+    ui/                # Reusable UI components
+    AboutSection.tsx   # About the developer
+    ContactSection.tsx # Email/social links
+    CurrencyConverter.tsx # Main feature
+    Footer.tsx         # Tech stack / links
+    HeroSection.tsx    # Welcome banner
+    Navigation.tsx     # Topbar menu
+  hooks/               # Custom logic hooks
   lib/                 # Utility functions
-  pages/               # Page components (Index, NotFound)
-  App.tsx              # App entry point
-  main.tsx             # React root
-public/                # Static assets
+  pages/               # Pages & routes
+  App.tsx              # Root component
+  main.tsx             # Bootstrap React
+public/                # Static assets (icons, fonts)
 ```
 
 ## 🖥️ Getting Started
 
-1. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-2. **Run development server:**
-   ```sh
-   npm run dev
-   ```
-3. **Build for production:**
-   ```sh
-   npm run build
-   ```
-4. **Preview production build:**
-   ```sh
-   npm run preview
-   ```
+```sh
+# 1. Install dependencies
+npm install
+
+# 2. Run local dev server
+npm run dev
+
+# 3. Build for production
+npm run build
+
+# 4. Preview build
+npm run preview
+```
 
 ## 📚 Learn More
 
-- [React Documentation](https://react.dev/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/)
-- [Vite Documentation](https://vitejs.dev/)
-- [Radix UI Primitives](https://www.radix-ui.com/)
-- [Sonner Toasts](https://sonner.emilkowal.dev/)
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Vite](https://vitejs.dev/)
+- [Radix UI](https://www.radix-ui.com/)
+- [Sonner](https://sonner.emilkowal.dev/)
 
 ---
 
-**Note:** This is the frontend part. Backend (Java Spring Boot) for real-time exchange rates is planned for future releases.
+### 🔗 Live Demo
+
+▶️ [Launch App](https://green-sea-0ad5cce03.1.azurestaticapps.net/)
 
 ---
 
+> 💬 This is the frontend part only. Backend (Spring Boot + WebFlux) hosted separately.
