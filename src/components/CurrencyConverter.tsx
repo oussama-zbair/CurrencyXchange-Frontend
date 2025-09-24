@@ -50,13 +50,13 @@ const CurrencySelector = ({
   const filteredCountries = searchQuery === ""
     ? countryData
     : countryData.filter(country => {
-        const search = searchQuery.toLowerCase();
-        return (
-          country.countryName?.toLowerCase().includes(search) ||
-          country.currencyCode?.toLowerCase().includes(search) ||
-          country.currencyName?.toLowerCase().includes(search)
-        );
-      });
+      const search = searchQuery.toLowerCase();
+      return (
+        country.countryName?.toLowerCase().includes(search) ||
+        country.currencyCode?.toLowerCase().includes(search) ||
+        country.currencyName?.toLowerCase().includes(search)
+      );
+    });
 
   const sortedCountries = [...filteredCountries].sort((a, b) => {
     const aIsPrimary = primaryCountries[a.currencyCode] === a.countryCode;
@@ -177,7 +177,16 @@ export const CurrencyConverter = () => {
   useEffect(() => {
     const detectUserLocation = async () => {
       try {
-        const locationData = await fetchLocation();
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const { ip } = await ipResponse.json();
+
+        const locationRes = await fetch("/api/location", {
+          headers: {
+            "X-Real-IP": ip,
+          },
+        });
+
+        const locationData = await locationRes.json();
         if (locationData.currency) {
           setFromCurrency(locationData.currency);
           setDetectedLocation(locationData);
@@ -189,32 +198,33 @@ export const CurrencyConverter = () => {
     detectUserLocation();
   }, []);
 
+
   useEffect(() => {
     const loadCountries = async () => {
-  try {
-    setDataLoading(true);
-    const data = await fetchCountries();
-    const patchedData = data.map((country: CountryData) => {
-      if (country.currencyCode === "USD") {
-        return { ...country, countryCode: "US" };
-      }
-      return country;
-    });
+      try {
+        setDataLoading(true);
+        const data = await fetchCountries();
+        const patchedData = data.map((country: CountryData) => {
+          if (country.currencyCode === "USD") {
+            return { ...country, countryCode: "US" };
+          }
+          return country;
+        });
 
-    if (Array.isArray(patchedData) && patchedData.length > 0) {
-      setCountryData(patchedData);
-      setDataError(null);
-    } else {
-      setCountryData([]);
-      setDataError("No currencies available.");
-    }
-  } catch {
-    setDataError("Failed to load currency data.");
-    setCountryData([]);
-  } finally {
-    setDataLoading(false);
-  }
-};
+        if (Array.isArray(patchedData) && patchedData.length > 0) {
+          setCountryData(patchedData);
+          setDataError(null);
+        } else {
+          setCountryData([]);
+          setDataError("No currencies available.");
+        }
+      } catch {
+        setDataError("Failed to load currency data.");
+        setCountryData([]);
+      } finally {
+        setDataLoading(false);
+      }
+    };
 
     loadCountries();
   }, []);
