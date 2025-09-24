@@ -8,10 +8,19 @@ export async function fetchCountries() {
 }
 
 export async function fetchLocation() {
-  const res = await fetch(`${BASE_URL}/api/location`);
+  const userIp = await fetch("https://api.ipify.org?format=json")
+    .then(res => res.json())
+    .then(data => data.ip)
+    .catch(() => null);
+
+  const headers: HeadersInit = {};
+  if (userIp) headers["X-Real-IP"] = userIp;
+
+  const res = await fetch(`${BASE_URL}/api/location`, { headers });
   if (!res.ok) throw new Error("Failed to fetch location");
   return res.json();
 }
+
 
 export async function fetchCurrencyRates(baseCurrency: string) {
   const res = await fetch(`${BASE_URL}/api/currency/rates?baseCurrency=${baseCurrency}`);
