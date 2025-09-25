@@ -6,15 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Flag from "react-flagkit";
-import { fetchCountries, fetchLocation, fetchCurrencyRates } from "@/lib/api";
+import { fetchCountries, fetchCurrencyRates } from "@/lib/api";
+import { geolocationService } from "@/services/geolocationService";
+import { LocationIndicator } from "@/components/LocationIndicator";
+import { RegionalCurrencies } from "@/components/RegionalCurrencies";
 
-interface CountryData {
-  countryName: string;
+export interface CountryData {
   currencyCode: string;
   currencyName: string;
   countryCode: string | null;
+  countryName: string;
   rate?: number;
 }
+
+
 
 const CurrencySelector = ({
   value,
@@ -34,19 +39,6 @@ const CurrencySelector = ({
 
   const selectedData = countryData.find(c => c.currencyCode === value);
 
-  const primaryCountries: Record<string, string> = {
-    USD: "US",
-    EUR: "EU",
-    GBP: "GB",
-    JPY: "JP",
-    CAD: "CA",
-    AUD: "AU",
-    CHF: "CH",
-    CNY: "CN",
-    INR: "IN",
-    BRL: "BR",
-  };
-
   const filteredCountries = searchQuery === ""
     ? countryData
     : countryData.filter(country => {
@@ -58,26 +50,10 @@ const CurrencySelector = ({
       );
     });
 
-  const sortedCountries = [...filteredCountries].sort((a, b) => {
-    const aIsPrimary = primaryCountries[a.currencyCode] === a.countryCode;
-    const bIsPrimary = primaryCountries[b.currencyCode] === b.countryCode;
-    if (aIsPrimary && !bIsPrimary) return -1;
-    if (!aIsPrimary && bIsPrimary) return 1;
-    return a.countryName.localeCompare(b.countryName);
-  });
+  const sortedCountries = [...filteredCountries].sort((a, b) => a.countryName.localeCompare(b.countryName));
 
   const renderFlag = (countryCode: string | null, currency: string) => {
-    if (!countryCode) {
-      const flagEmojis: { [key: string]: string } = {
-        XOF: "🌍",
-        BTC: "₿",
-        ETH: "Ξ",
-        XDR: "🏦",
-        XAU: "🥇",
-        XAG: "🥈",
-      };
-      return <span className="text-lg">{flagEmojis[currency] || "💱"}</span>;
-    }
+    if (!countryCode) return <span className="text-lg">💱</span>;
     return <Flag country={countryCode} size={24} />;
   };
 
@@ -91,7 +67,7 @@ const CurrencySelector = ({
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            className="h-12 w-full justify-between text-lg transition-smooth hover:shadow-glow focus:shadow-glow"
+            className="h-12 w-full justify-between text-lg"
           >
             <div className="flex items-center space-x-2">
               {renderFlag(selectedData?.countryCode || null, selectedData?.currencyCode || "")}
@@ -102,11 +78,11 @@ const CurrencySelector = ({
                 </span>
               </div>
             </div>
-            <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Search className="ml-2 h-4 w-4 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0 bg-popover border-border" align="start">
-          <Command className="bg-popover">
+        <PopoverContent className="w-[400px] p-0" align="start">
+          <Command>
             <CommandInput
               placeholder="Search currency..."
               value={searchQuery}
@@ -127,7 +103,7 @@ const CurrencySelector = ({
                     }}
                   >
                     {renderFlag(country.countryCode, country.currencyCode)}
-                    <div className="flex-1 min-w-0 ml-3">
+                    <div className="ml-3 min-w-0">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-sm">{country.countryName}</span>
                         <span className="text-xs px-2 py-1 bg-muted rounded-full font-mono">
@@ -172,60 +148,35 @@ export const CurrencyConverter = () => {
   const [countryData, setCountryData] = useState<CountryData[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
-  const [detectedLocation, setDetectedLocation] = useState<{ country: string; currency: string } | null>(null);
+  const [locationData, setLocationData] = useState<any>(null);
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   useEffect(() => {
-    const detectUserLocation = async () => {
-      try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const { ip } = await ipResponse.json();
-
-        const locationRes = await fetch("/api/location", {
-          headers: {
-            "X-Real-IP": ip,
-          },
-        });
-
-        const locationData = await locationRes.json();
-        if (locationData.currency) {
-          setFromCurrency(locationData.currency);
-          setDetectedLocation(locationData);
-        }
-      } catch {
-        console.warn("Location detection failed, defaulting to USD");
+    const fetchGeoData = async () => {
+      const geo = await geolocationService.getUserLocation();
+      setLocationData(geo);
+      if (geo?.currency?.code) setFromCurrency(geo.currency.code);
+      if (geo?.time_zone?.name) {
+        const time = geolocationService.getCurrentTimeInUserTimezone(geo.time_zone.name);
+        setCurrentTime(time);
       }
     };
-    detectUserLocation();
+    fetchGeoData();
   }, []);
-
 
   useEffect(() => {
     const loadCountries = async () => {
       try {
         setDataLoading(true);
         const data = await fetchCountries();
-        const patchedData = data.map((country: CountryData) => {
-          if (country.currencyCode === "USD") {
-            return { ...country, countryCode: "US" };
-          }
-          return country;
-        });
-
-        if (Array.isArray(patchedData) && patchedData.length > 0) {
-          setCountryData(patchedData);
-          setDataError(null);
-        } else {
-          setCountryData([]);
-          setDataError("No currencies available.");
-        }
+        setCountryData(data);
+        setDataError(null);
       } catch {
         setDataError("Failed to load currency data.");
-        setCountryData([]);
       } finally {
         setDataLoading(false);
       }
     };
-
     loadCountries();
   }, []);
 
@@ -239,32 +190,36 @@ export const CurrencyConverter = () => {
     setIsLoading(true);
     try {
       const data = await fetchCurrencyRates(fromCurrency);
-      if (!data.exchangeRates || !data.exchangeRates[toCurrency]) {
-        throw new Error(`Exchange rate for ${toCurrency} not found`);
-      }
       const rate = data.exchangeRates[toCurrency];
+      if (!rate) throw new Error();
       setExchangeRate(rate);
       setConvertedAmount(parseFloat(amount) * rate);
     } catch {
-      setConvertedAmount(null);
       setExchangeRate(null);
+      setConvertedAmount(null);
       setDataError("Error converting currencies. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <section id="currency-converter" className="py-20 bg-gradient-subtle">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">Currency Converter</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Convert between 240+ currencies with real-time exchange rates
-          </p>
-        </div>
+  const regionalCurrencies = locationData?.continent_code
+    ? geolocationService.getRegionalCurrencies(locationData.continent_code)
+    : [];
 
-        <Card className="max-w-2xl mx-auto border-primary/10 shadow-elegant backdrop-blur-sm bg-card/50">
+  return (
+    <section className="py-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <LocationIndicator locationData={locationData} isLoading={dataLoading} currentTime={currentTime || undefined} />
+
+        <RegionalCurrencies
+          regionalCurrencies={regionalCurrencies}
+          countryData={countryData}
+          onCurrencySelect={setFromCurrency}
+          userCountry={locationData?.country_code2}
+        />
+
+        <Card className="border-primary/10 shadow-elegant">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2 text-2xl">
               <TrendingUp className="h-6 w-6 text-primary" />
@@ -272,79 +227,40 @@ export const CurrencyConverter = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Amount</label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                className="h-12 text-lg font-semibold text-center"
-                placeholder="Enter amount"
-                min="0"
-                step="0.01"
-              />
+            <Input
+              type="number"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="h-12 text-lg font-semibold text-center"
+              placeholder="Enter amount"
+              min="0"
+              step="0.01"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <CurrencySelector value={fromCurrency} onSelect={setFromCurrency} label="From" countryData={countryData} disabled={dataLoading} />
+
+              <div className="flex justify-center md:justify-start">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleSwapCurrencies}
+                  className="h-12 w-12"
+                >
+                  <ArrowUpDown className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <CurrencySelector value={toCurrency} onSelect={setToCurrency} label="To" countryData={countryData} disabled={dataLoading} />
             </div>
 
-            {detectedLocation && (
-              <div className="text-center py-2 px-4 bg-primary/5 border border-primary/10 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Detected currency:{" "}
-                  {countryData.find(c => c.currencyCode === detectedLocation.currency)?.currencyName ||
-                    detectedLocation.currency}{" "}
-                  ({detectedLocation.currency})
-                </p>
-              </div>
-            )}
-
-            {dataLoading && (
-              <div className="text-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                <p className="text-muted-foreground">Loading currency data...</p>
-              </div>
-            )}
-
-            {dataError && (
-              <div className="text-center py-4 px-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-destructive text-sm">{dataError}</p>
-              </div>
-            )}
-
-            {!dataLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <CurrencySelector value={fromCurrency} onSelect={setFromCurrency} label="From" countryData={countryData} disabled={dataLoading} />
-
-                <div className="flex justify-center md:justify-start">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSwapCurrencies}
-                    disabled={dataLoading}
-                    className="h-12 w-12 rounded-full border-primary/20 hover:border-primary hover:bg-primary/10 transition-all duration-300"
-                  >
-                    <ArrowUpDown className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                <CurrencySelector value={toCurrency} onSelect={setToCurrency} label="To" countryData={countryData} disabled={dataLoading} />
-              </div>
-            )}
-
-            {!dataLoading && (
-              <Button
-                onClick={handleConvert}
-                disabled={!amount || parseFloat(amount) <= 0 || isLoading || dataLoading}
-                className="w-full h-12 text-lg font-semibold gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Converting...
-                  </>
-                ) : (
-                  "Convert Currency"
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={handleConvert}
+              disabled={!amount || parseFloat(amount) <= 0 || isLoading || dataLoading}
+              className="w-full h-12 text-lg font-semibold"
+            >
+              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Convert Currency"}
+            </Button>
 
             {convertedAmount !== null && exchangeRate !== null && !isLoading && (
               <div className="mt-6 p-6 bg-primary/5 rounded-xl border border-primary/10">
@@ -357,6 +273,12 @@ export const CurrencyConverter = () => {
                     {formatCurrency(parseFloat(amount), fromCurrency)} ≈ {formatCurrency(convertedAmount, toCurrency)}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {dataError && (
+              <div className="text-center text-sm text-red-500 pt-4">
+                {dataError}
               </div>
             )}
           </CardContent>
