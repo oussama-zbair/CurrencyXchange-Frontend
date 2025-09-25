@@ -53,9 +53,12 @@ const CurrencySelector = ({
   const sortedCountries = [...filteredCountries].sort((a, b) => a.countryName.localeCompare(b.countryName));
 
   const renderFlag = (countryCode: string | null, currency: string) => {
-    if (!countryCode) return <span className="text-lg">💱</span>;
-    return <Flag country={countryCode} size={24} />;
+    const flagCode = currency === "EUR" ? "EU" : countryCode;
+
+    if (!flagCode) return <span className="text-lg">💱</span>;
+    return <Flag country={flagCode} size={24} />;
   };
+
 
   return (
     <div className="space-y-2">
