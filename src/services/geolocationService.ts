@@ -6,11 +6,13 @@ interface GeolocationResponse {
 }
 
 class GeolocationService {
-  private baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080/api/location';
+  // Backend base URL
+  private baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
+  // Calls backend /api/location endpoint
   async getUserLocation(): Promise<GeolocationResponse | null> {
     try {
-      const response = await fetch(this.baseUrl);
+      const response = await fetch(`${this.baseUrl}/api/location`);
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       const data = await response.json();
       console.log('Backend geolocation data:', data);
