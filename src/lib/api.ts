@@ -1,6 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "https://currencyxchange-backend.azurewebsites.net";
 
-// Add `/api` in all requests
 export async function fetchCountries() {
   const res = await fetch(`${BASE_URL}/api/countries`);
   if (!res.ok) throw new Error("Failed to fetch countries");
@@ -13,13 +12,13 @@ export async function fetchLocation() {
     .then(data => data.ip)
     .catch(() => null);
 
-  const headers: HeadersInit = {};
-  if (userIp) headers["X-Real-IP"] = userIp;
+  if (!userIp) throw new Error("Failed to detect user IP");
 
-  const res = await fetch(`${BASE_URL}/api/location`, { headers });
+  const res = await fetch(`${BASE_URL}/api/location/${userIp}`);
   if (!res.ok) throw new Error("Failed to fetch location");
   return res.json();
 }
+
 
 
 export async function fetchCurrencyRates(baseCurrency: string) {
