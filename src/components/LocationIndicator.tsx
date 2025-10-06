@@ -1,6 +1,5 @@
-import { MapPin as MapPinIcon, Clock, Globe } from "lucide-react";
+import { MapPin as MapPinIcon, Globe } from "lucide-react";
 import { Card as UICard, CardContent } from "@/components/ui/card";
-import FlagIcon from "react-flagkit";
 import type { GeolocationResponse } from "@/services/geolocationService";
 
 interface LocationIndicatorProps {
@@ -9,7 +8,7 @@ interface LocationIndicatorProps {
   currentTime?: string;
 }
 
-export const LocationIndicator = ({ locationData, isLoading, currentTime }: LocationIndicatorProps) => {
+export const LocationIndicator = ({ locationData, isLoading }: LocationIndicatorProps) => {
   if (isLoading) {
     return (
       <UICard className="bg-primary/5 border-primary/10">
@@ -39,29 +38,23 @@ export const LocationIndicator = ({ locationData, isLoading, currentTime }: Loca
   return (
     <UICard className="bg-primary/5 border-primary/10 hover:bg-primary/10 transition-colors duration-200">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <FlagIcon country={locationData.country_code2} size={20} />
-            <div className="flex flex-col">
-              <div className="flex items-center space-x-2">
-                <MapPinIcon className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">
-                  {locationData.city}, {locationData.country_name}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-xs text-muted-foreground">
-                  Currency: {locationData.currency?.code} ({locationData.currency?.symbol})
-                </span>
-              </div>
+        <div className="flex items-center space-x-3">
+          <img
+            src={`https://flagcdn.com/24x18/${locationData.country_code2?.toLowerCase()}.png`}
+            alt={locationData.country_name}
+            className="w-6 h-4 rounded-sm"
+          />
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2">
+              <MapPinIcon className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{locationData.country_name}</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className="text-xs text-muted-foreground">
+                Currency: {locationData.currency || "N/A"}
+              </span>
             </div>
           </div>
-          {currentTime && (
-            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>{currentTime}</span>
-            </div>
-          )}
         </div>
       </CardContent>
     </UICard>
