@@ -21,6 +21,7 @@ export async function fetchLocation() {
 
 
 
+
 export async function fetchCurrencyRates(baseCurrency: string) {
   const res = await fetch(`${BASE_URL}/api/currency/rates?baseCurrency=${baseCurrency}`);
   if (!res.ok) throw new Error("Failed to fetch exchange rates");
